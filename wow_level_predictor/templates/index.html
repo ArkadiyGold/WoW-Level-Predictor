@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WoW Level Predictor</title>
+    <style>
+        h1, p {
+        color: #ffffff;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+        /* Основной фон */
+        body {
+        background: url('https://db4sgowjqfwig.cloudfront.net/campaigns/29929/assets/446823/Elemental_Plane_of_Earth.jpg?1428678300') no-repeat center center fixed;
+        background-size: cover;
+        background-color: rgba(0, 0, 0, 0.6);
+        background-blend-mode: overlay;
+        font-family: 'Cinzel', serif;
+        color: #ffffff;
+        margin: 0;
+        padding: 0;
+        }
+
+        /* Обертка контента */
+        .container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+            backdrop-filter: blur(5px); /* Эффект "стекла" */
+        }
+
+        /* Заголовки */
+        h1, h2, h3 {
+            color: #ffcc00;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            font-weight: 700;
+        }
+
+        /* Таблица */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(10, 10, 30, 0.8);
+            border: 2px solid #00aaff;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.2);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #00aaff;
+        }
+
+        th {
+            background: rgba(0, 170, 255, 0.2);
+            font-weight: bold;
+        }
+
+        tr:hover {
+            background: rgba(0, 170, 255, 0.1);
+        }
+
+        /* Кнопки */
+        button {
+            background: linear-gradient(135deg, #00aaff, #0055ff);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 12px rgba(0, 255, 255, 0.5);
+        }
+
+        body {
+            font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px;
+        }
+        h1 {
+            color: #8B0000;
+        }
+        label {
+            display: block; margin-top: 15px;
+        }
+        select, input {
+            width: 100%; padding: 8px; margin-top: 5px;
+        }
+        button {
+            margin-top: 20px; padding: 10px 20px; background: #8B0000; color: white; border: none; cursor: pointer;
+        }
+        #result { margin-top: 20px; padding: 15px; background: #000000; border-left: 4px solid #8B0000; }
+
+    </style>
+</head>
+<body>
+    <h1>🔮 WoW Level Predictor</h1>
+    <p>Укажите параметры персонажа, чтобы узнать, достиг ли он максимального уровня.</p>
+
+    <!-- РАСА -->
+    <label for="race">Раса (Race):</label>
+    <select id="race" name="race">
+        <option value="">Выберите расу...</option>
+        {% for race in races %}
+            <option value="{{ race }}">{{ race }}</option>
+        {% endfor %}
+    </select>
+
+    <!-- КЛАСС -->
+    <label for="charclass">Класс (Class):</label>
+    <select id="charclass" name="charclass">
+        <option value="">Выберите класс...</option>
+        {% for charclass in classes %}
+            <option value="{{ charclass }}">{{ charclass }}</option>
+        {% endfor %}
+    </select>
+
+    <!-- ЗОНА -->
+    <label for="zone">Зона (Zone):</label>
+    <select id="zone" name="zone">
+        <option value="">Выберите зону...</option>
+        {% for zone in zones %}
+            <option value="{{ zone }}">{{ zone }}</option>
+        {% endfor %}
+    </select>
+
+    <label>Гильдия (Id Гильдии, -1 = нет):</label>
+    <input type="number" id="guild" value="-1" min="-1">
+
+    <button onclick="predict()">Предсказать</button>
+
+    <div id="result" style="display:none;"></div>
+
+    <script>
+        async function predict() {
+            // Получаем значения из полей
+            const race = document.getElementById('race').value;
+            const charclass = document.getElementById('charclass').value;
+            const zone = document.getElementById('zone').value;
+            let guildValue = document.getElementById('guild').value;
+
+            // Проверяем, что все обязательные поля заполнены
+            if (!race || !charclass || !zone) {
+                const resDiv = document.getElementById('result');
+                resDiv.innerHTML = `<b>Ошибка:</b> Пожалуйста, выберите расу, класс и зону.`;
+                resDiv.style.display = 'block';
+                return;
+            }
+
+            // Преобразуем Guild ID в число, если поле не пустое
+            let guildId = -1;
+            if (guildValue !== '') {
+                guildId = parseInt(guildValue);
+                if (isNaN(guildId)) {
+                    const resDiv = document.getElementById('result');
+                    resDiv.innerHTML = `<b>Ошибка:</b> Пожалуйста, введите корректное число для Guild ID.`;
+                    resDiv.style.display = 'block';
+                    return;
+                }
+            }
+
+            const data = {
+                race: race,
+                charclass: charclass,
+                zone: zone,
+                guild: guildId
+            };
+
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            const resDiv = document.getElementById('result');
+
+            if (result.error) {
+                resDiv.innerHTML = `<b>Ошибка:</b> ${result.error}`;
+            } else {
+                resDiv.innerHTML = `
+                    <b>${result.message}</b><br>
+                    Вероятность: ${(result.probability * 100).toFixed(1)}%
+                `;
+            }
+            resDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
