@@ -21,5 +21,5 @@
    git clone https://github.com/ArkadiyGold/wow-level-predictor.git
    cd wow-level-predictor
    pip install -r installers.txt
-   python app.py
+   python wowlvlapp.py
    ```
