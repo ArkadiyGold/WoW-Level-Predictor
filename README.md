@@ -11,5 +11,15 @@
 - `data/` — данные
 - `models/` — обученная модель
 - `notebooks/` — код обучения модели (Google Colab)
-- `wowlvlapp.py` — Flask API
 - `templates/index.html` — веб-интерфейс
+- `installers.txt` — установщик библиотек
+- `wowlvlapp.py` — Flask API
+
+ ## Запуск
+
+   ```bash
+   git clone https://github.com/ArkadiyGold/wow-level-predictor.git
+   cd wow-level-predictor
+   pip install -r installers.txt
+   python app.py
+   ```
