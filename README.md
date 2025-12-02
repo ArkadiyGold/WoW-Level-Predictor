@@ -28,7 +28,7 @@ wow-battleground-predictor/
 │   └── class_efficiency.pkl
 ├── templates/
 │   └── index.html          # Веб-интерфейс с рекомендациями
-├── app.py                  # Flask API
+├── wowbattleground.py                  # Flask API
 
 Запуск
 ```
