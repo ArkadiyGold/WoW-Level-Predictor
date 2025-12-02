@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WoW Battleground Predictor</title>
+    <style>
+        body {
+            font-family: 'Cinzel', serif;
+            background: url('https://db4sgowjqfwig.cloudfront.net/campaigns/29929/assets/446823/Elemental_Plane_of_Earth.jpg?1428678300') no-repeat center center fixed;
+            background-size: cover;
+            background-color: rgba(0, 0, 0, 0.7);
+            background-blend-mode: overlay;
+            color: #ffffff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+        }
+        h1 {
+            color: #ffcc00;
+            text-align: center;
+            margin-top: 0;
+        }
+        label { display: block; margin-top: 15px; font-weight: bold; }
+        select, input {
+            width: 100%; padding: 8px; margin-top: 5px;
+            background: rgba(30, 30, 50, 0.8);
+            color: white;
+            border: 1px solid #00aaff;
+            border-radius: 5px;
+        }
+        button {
+            margin-top: 20px; padding: 10px 20px;
+            background: linear-gradient(135deg, #00aaff, #0055ff);
+            color: white; border: none; border-radius: 5px;
+            cursor: pointer; width: 100%;
+        }
+        button:hover { transform: scale(1.03); }
+        #result, #recommendations {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(10, 10, 30, 0.8);
+            border-left: 4px solid #00ffcc;
+            display: none;
+        }
+        #recommendations h3 {
+            margin-top: 0;
+            color: #00ffcc;
+        }
+        body.horde { background-image: url('https://i.pinimg.com/originals/76/a2/e9/76a2e9c8ee37f5a83f9fbc91ba58f71d.jpg'); }
+        body.alliance { background-image: url('https://wow.zamimg.com/uploads/guide/seo/7369.jpg?1539553416'); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚔️ WoW Battleground Predictor</h1>
+        <p>Предскажите шанс победы в следующем поле боя.</p>
+
+        <label>Фракция:</label>
+        <select id="Faction">
+            <option value="Horde">Horde</option>
+            <option value="Alliance">Alliance</option>
+        </select>
+
+        <label>Класс:</label>
+        <select id="Class">
+            {% for cls in classes %}
+                <option value="{{ cls }}">{{ cls }}</option>
+            {% endfor %}
+        </select>
+
+        <label>Роль:</label>
+        <select id="Rol">
+            <option value="dps">DPS</option>
+            <option value="heal">Healer</option>
+        </select>
+
+        <label>Бонусный ивент:</label>
+        <select id="BE">
+            <option value="No">Нет</option>
+            <option value="Yes">Да</option>
+        </select>
+
+        <button onclick="predict()">Предсказать победу!</button>
+
+        <div id="result"></div>
+        <div id="recommendations"></div>
+    </div>
+
+    <script>
+        document.getElementById('Faction').addEventListener('change', function() {
+        document.body.className = this.value.toLowerCase(); // horde / alliance
+        });
+        const healerClasses = ['Shaman', 'Paladin', 'Priest', 'Druid', 'Monk'];
+        document.getElementById('Class').addEventListener('change', function() {
+            const cls = this.value;
+            const rol = document.getElementById('Rol');
+            rol.innerHTML = '<option value="dps">DPS</option>';
+            if (healerClasses.includes(cls)) {
+                rol.innerHTML += '<option value="heal">Healer</option>';
+            }
+        });
+
+        async function predict() {
+            const data = {
+                Faction: document.getElementById('Faction').value,
+                Class: document.getElementById('Class').value,
+                Rol: document.getElementById('Rol').value,
+                BE: document.getElementById('BE').value
+            };
+
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            const resDiv = document.getElementById('result');
+            const recDiv = document.getElementById('recommendations');
+
+            if (data.BE === 'Yes') {
+                result.recommendations.push("✨ Бонусный ивент активен — это повышает общий шанс победы команды на 10%.");
+            }
+
+            if (result.error) {
+                resDiv.innerHTML = `<b>❌ Ошибка:</b> ${result.error}`;
+                resDiv.style.display = 'block';
+                recDiv.style.display = 'none';
+            } else {
+                resDiv.innerHTML = `<b>${result.message}</b><br>Вероятность победы: ${(result.probability * 100).toFixed(1)}%`;
+                resDiv.style.display = 'block';
+
+                if (result.recommendations && result.recommendations.length > 0) {
+                    recDiv.innerHTML = `
+                        <h3>💡 Рекомендации на основе боёв:</h3>
+                        <ul>${result.recommendations.map(r => `<li>${r}</li>`).join('')}</ul>
+                    `;
+                    recDiv.style.display = 'block';
+                } else {
+                    recDiv.style.display = 'none';
+                }
+            }
+        }
+    </script>
+</body>
+</html>

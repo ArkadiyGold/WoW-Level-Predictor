@@ -1,0 +1,6 @@
+pip install flask pandas scikit-learn joblib xgboost
+Flask  3.1.2
+pandas  2.3.3
+scikit-learn  1.7.2
+joblib  1.5.2
+xgboost  3.1.2
